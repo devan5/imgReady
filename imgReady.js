@@ -10,7 +10,6 @@ with dances.plugins
 	lastDate: 2013.06.18
 
 	require: [
-		"dances.nativeExtend"
 	],
 
 	effect: [
@@ -20,7 +19,7 @@ with dances.plugins
 
 	log: {
 		"v1.0": [
-			+. {logs},
+			+. TODO checkCode: gif 格式潜在的问题
 			+. {logs}
 		]
 	}
@@ -62,8 +61,6 @@ define(["require", "module", "dNative"], function(require, module){
 		img2Ready,
 		ctrlReady,
 
-		_ = require("dNative"),
-
 		uc = function(fn){
 			return function(){
 				return Function.prototype.call.apply(fn, arguments);
@@ -93,7 +90,7 @@ define(["require", "module", "dNative"], function(require, module){
 				imgArr,
 
 				_len,
-				imgDom
+				img
 			;
 
 			do{
@@ -105,22 +102,33 @@ define(["require", "module", "dNative"], function(require, module){
 					continue;
 				}
 
+				_len = imgArr.length - 1;
 				do{
-					_len = imgArr.length - 1;
-					imgDom = imgArr[len];
+					img = imgArr[_len];
 
-					if(imgDom.width > 0 || imgDom.height > 0){
-						fn.call(imgDom, imgDom.width, imgDom.height);
-						imgDom.onload = null;
-						imgDom = null;
-						imgArr.splice(len, 1);
+					if(img.__error){
+						img.onload = img.error = null;
+						img = null;
+						imgArr.splice(_len, 1);
+						continue;
+					}
+
+
+					if(img.width > 0 || img.height > 0){
+						img.__enabled || fn.call(img, img.width, img.height);
+						img.__enabled = true;
+						img.error = null;
+						img = null;
+						imgArr.splice(_len, 1);
 					}
 
 				}while(_len--);
 
+				0 === imgArr.length && this.repo.splice(len, 1);
+
 			}while(len--);
 
-			1 && this.repo.length && setTimeout(function(){
+			this.repo.length && setTimeout(function(){
 				_this.scan();
 			}, 50);
 		},
@@ -136,7 +144,11 @@ define(["require", "module", "dNative"], function(require, module){
 			args = slice(arguments),
 			urls = args.shift(),
 			imgArr,
-			callback = args.pop()
+			callback = args.pop(),
+
+			len,
+			url,
+			img
 		;
 
 		if("string" === typeof urls){
@@ -147,18 +159,18 @@ define(["require", "module", "dNative"], function(require, module){
 		}
 
 		if("[object Array]" !== (toString(urls))){
-
-			// check This errorRange
 			return this;
 		}
 
-
 		imgArr = [];
 		imgArr.__img2go = callback;
-		_.forEach(urls, function(url){
-			var
-				img
-			;
+
+		len = urls.length - 1;
+
+		do{
+			url = urls;
+
+			if(!url){ continue; }
 
 			img = new Image();
 			img.src = url;
@@ -166,20 +178,31 @@ define(["require", "module", "dNative"], function(require, module){
 			img.removeAttribute("height");
 
 			if(img.complete){
-				$$log("complete", "debug");
 				callback.call(img, img.width, img.height);
 
 			}else{
-				img.onload = function(){
-				$$log("onload", "debug");
-					callback.call(img, img.width, img.height);
-					img.onload = null;
-				};
+				(function(img){
+
+					img.onerror = function(){
+						callback.call(img, -1, -1);
+						img.onload = img.onerror = null;
+						img.__error = true;
+						img = null;
+					};
+
+					img.onload = function(){
+						img.__enabled || callback.call(img, img.width, img.height);
+						img.onload = img.onerror = null;
+						img.__enabled = true;
+						img = null;
+					};
+
+				})(img);
 
 				imgArr.push(img);
 			}
 
-		});
+		}while(len--);
 
 		urls.length = 0;
 

@@ -66,11 +66,11 @@
 			img.src = src;
 
 			_(src, function(){
-				$log(arguments[0],"++++++++++" , arguments[1]);
+				$log("尺寸为" + arguments[0], ", ", arguments[1]);
 			});
 
 			img.onload = function(){
-				$log("onload", new Date - time);
+				$log("onload!!!", new Date - time);
 			};
 
 		});
