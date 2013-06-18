@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title>imgReady</title>
+
+	<script type="text/javascript" src="../../../dances.amd/dances.amd.js"></script>
+	<script type="text/javascript" src="../../../dances.path.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="../../../_helper/jasmine/lib/1.3.1/jasmine.css" media="all">
+	<script type="text/javascript" src="../../../_helper/jasmine/lib/1.3.1/jasmine.js"></script>
+	<script type="text/javascript" src="../../../_helper/jasmine/lib/1.3.1/jasmine-html.js"></script>
+
+	<script type="text/javascript">
+		(function(){
+			var jasmineEnv = jasmine.getEnv();
+			jasmineEnv.updateInterval = 1000;
+
+			var htmlReporter = new jasmine.HtmlReporter();
+//			var htmlReporter = new jasmine.TrivialReporter();
+
+			jasmineEnv.addReporter(htmlReporter);
+
+			jasmineEnv.specFilter = function(spec){
+				return htmlReporter.specFilter(spec);
+			};
+
+			var currentWindowOnload = window.onload;
+
+			window.onload = function(){
+				if(currentWindowOnload){
+					currentWindowOnload();
+				}
+				execJasmine();
+			};
+
+			function execJasmine(){
+				jasmineEnv.execute();
+			}
+
+		})();
+	</script>
+
+</head>
+<body>
+
+	<!--<img style="display: none;" src="https://dl.dropboxusercontent.com/u/21444143/devan5_photos/stale/20100330156.jpg" alt="" />-->
+
+	<!-- spec代码 -->
+	<script type="text/javascript">
+		require.conf("baseUrl", "../../../");
+		define.amd.imgReady = true;
+
+		require(["imgReady"], function(_){
+			var src ;
+
+			src = "https://dl.dropboxusercontent.com/u/21444143/devan5_photos/stale/20100330156.jpg";
+
+//			src += ",baidu";
+
+			var
+				img = new Image(),
+				time = new Date
+			;
+
+			img.src = src;
+
+			_(src, function(){
+				$log(arguments[0],"++++++++++" , arguments[1]);
+			});
+
+			img.onload = function(){
+				$log("onload", new Date - time);
+			};
+
+		});
+
+		describe("Test",function(){
+			it("TestUnit",function(){
+				expect("ok").toEqual("ok");
+			});
+		});
+	</script>
+
+</body>
+</html>
