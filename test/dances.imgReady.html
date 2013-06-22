@@ -27,14 +27,16 @@
 
 			var currentWindowOnload = window.onload;
 
+/*
 			window.onload = function(){
 				if(currentWindowOnload){
 					currentWindowOnload();
 				}
 				execJasmine();
 			};
+*/
 
-			function execJasmine(){
+			window.execJasmine =  function (){
 				jasmineEnv.execute();
 			}
 
@@ -56,30 +58,439 @@
 
 			src = "https://dl.dropboxusercontent.com/u/21444143/devan5_photos/stale/20100330156.jpg";
 
-//			src += ",baidu";
+			describe("dances.imgReady", function(){
 
-			var
-				img = new Image(),
-				time = new Date
-			;
+				var extraReady = undefined === document.createElement("script").onload ?
+						function(elem, fLoaded, scope){
+							var
+								fPreLoaded = "function" === typeof elem.onreadystatechange ?
+									elem.onreadystatechange :
+									false
+								;
 
-			img.src = src;
+							if("function" === typeof fLoaded){
+								elem.onreadystatechange = function(){
+									if("loaded" === elem.readyState || "complete" === elem.readyState){
+										if(fPreLoaded){
+											fPreLoaded.call(scope || elem);
 
-			_(src, function(){
-				$log("尺寸为" + arguments[0], ", ", arguments[1]);
+											// gc
+											fPreLoaded = null;
+										}
+										fLoaded.call(scope || elem);
+
+										// gc
+										elem.onreadystatechange = null;
+										scope = elem = fLoaded = null;
+									}
+								};
+							}
+						} :
+
+						function(elem, fLoaded, scope){
+							var
+								fPreLoaded = "function" === typeof elem.onload ?
+									elem.onload :
+									false
+								;
+
+							if("function" === typeof fLoaded){
+								elem.onload = function(){
+									if(fPreLoaded){
+										fPreLoaded.call(scope || elem);
+
+										//gc
+										fPreLoaded = null;
+									}
+									fLoaded.call(scope || elem);
+
+									// gc
+									elem.onload = null;
+									scope = elem = fLoaded = null;
+								};
+							}
+						}
+					;
+
+				var iframeEl;
+
+				beforeEach(function(){
+
+					iframeEl = document.createElement("iframe");
+					iframeEl.style.display = "none";
+				});
+
+				0 && it("basic", function(){
+
+					var
+						_ok,
+						w,
+						h
+					;
+
+					runs(function(){
+
+						extraReady(iframeEl, function(){
+							var _this = this.contentWindow;
+
+							_this.dances = {};
+
+							dances
+								.add.switchWindow(_this)
+								("../imgReady", function(){
+									var _ = _this.dances.imgReady;
+
+									_(src, function(_w, _h){
+										_ok = true;
+										w = _w;
+										h = _h;
+									});
+
+								})
+							;
+						});
+
+						document.body.appendChild(iframeEl);
+					});
+
+
+					waitsFor(function(){
+						return _ok;
+					}, "load failed", 15000);
+
+					runs(function(){
+						expect(w).toEqual(2048);
+						expect(h).toEqual(1536);
+					});
+
+				});
+
+				0 && it("local img", function(){
+					var
+						_ok,
+						w,
+						h
+					;
+
+					runs(function(){
+
+						extraReady(iframeEl, function(){
+							var _this = this.contentWindow;
+
+							_this.dances = {};
+
+							dances
+								.add.switchWindow(_this)
+								("../imgReady", function(){
+									var _ = _this.dances.imgReady;
+
+									_("src/relivebleach_v41.png", function(_w, _h){
+										_ok = true;
+										w = _w;
+										h = _h;
+									});
+
+								})
+							;
+						});
+
+						document.body.appendChild(iframeEl);
+					});
+
+
+					waitsFor(function(){
+						return _ok;
+					}, "load failed", 15000);
+
+					runs(function(){
+						expect(w).toEqual(1366);
+						expect(h).toEqual(768);
+					});
+
+				});
+
+				0 && describe("多个 urls", function(){
+					it("local", function(){
+						var
+							_ok = 0,
+							w = true,
+							h = true,
+
+							src
+						;
+
+						runs(function(){
+
+							extraReady(iframeEl, function(){
+								var _this = this.contentWindow;
+
+								_this.dances = {};
+
+								dances
+									.add.switchWindow(_this)
+								("../imgReady", function(){
+									var
+										_ = _this.dances.imgReady
+									;
+
+									src = [];
+									src.push("src/g_0.jpg");
+									src.push("src/g_1.jpg");
+									src.push("src/g_2.jpg");
+									src.push("src/g_3.jpg");
+									src.push("src/g_4.jpg");
+
+									_(src, function(_w, _h){
+										_ok++;
+										w = w && _w > 0;
+										h = h && _h > 0;
+									});
+
+								})
+								;
+							});
+
+							document.body.appendChild(iframeEl);
+						});
+
+						waitsFor(function(){
+							return src && _ok === src.length;
+						}, "load failed", 15000);
+
+						runs(function(){
+							expect(w && h).toEqual(true);
+						});
+					});
+
+					0 &&it("remote", function(){
+						var
+							_ok = 0,
+							w = true,
+							h = true,
+							src
+						;
+
+						runs(function(){
+
+							extraReady(iframeEl, function(){
+								var _this = this.contentWindow;
+
+								_this.dances = {};
+
+								dances
+									.add.switchWindow(_this)
+								("../imgReady", function(){
+									var
+										_ = _this.dances.imgReady
+									;
+
+									src = [];
+									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/reLivebleach_v1.png");
+									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/reLivebleach_v2.png");
+									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/reLivebleach_v3.png");
+									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/relivebleach_v41.png");
+
+									_(src, function(_w, _h){
+										_ok++;
+										w = w && _w > 0;
+										h = h && _h > 0;
+									});
+
+								})
+								;
+							});
+
+							document.body.appendChild(iframeEl);
+						});
+
+						waitsFor(function(){
+							return src && _ok === src.length;
+						}, "load failed", 25000);
+
+						runs(function(){
+							expect(w && h).toEqual(true);
+						});
+
+					});
+				});
+
+				0 && it("检查定时器机制", function(){
+					var
+						_ok = 0,
+						w = true,
+						h = true,
+						src,
+
+						crossFlag,
+
+						imgReady,
+						beforeFirstCall
+					;
+
+					runs(function(){
+
+						extraReady(iframeEl, function(){
+							var _this = this.contentWindow;
+
+							_this.dances = {};
+
+							dances
+								.add.switchWindow(_this)
+								("../imgReady", function(){
+									var
+										_ = _this.dances.imgReady
+									;
+
+									imgReady = _;
+
+									src = [];
+									src.push("src/g_0.jpg");
+									src.push("src/g_1.jpg");
+									src.push("src/g_2.jpg");
+									src.push("src/g_3.jpg");
+									src.push("src/g_4.jpg");
+									src.push("src/relivebleach_v41.png");
+
+									_(src, function(_w, _h){
+										_ok++;
+										w = w && _w > 0;
+										h = h && _h > 0;
+									});
+
+								})
+							;
+
+						});
+
+						document.body.appendChild(iframeEl);
+					});
+
+
+					waitsFor(function(){
+						if(src && _ok === src.length){
+							setTimeout(function(){
+								crossFlag = true;
+							}, 80);
+						}
+						return crossFlag;
+					}, "load failed", 15000);
+
+					runs(function(){
+						expect(w && h).toEqual(true);
+						expect(beforeFirstCall).toBe(undefined);
+						expect(imgReady.getStatus()).toEqual("end");
+					});
+
+				});
+
+				0 && it("速度 检测", function(){
+					var
+						startTime,
+						readyTime,
+						loadTime
+					;
+
+					runs(function(){
+
+						extraReady(iframeEl, function(){
+							var _this = this.contentWindow;
+
+							_this.dances = {};
+
+							dances
+								.add.switchWindow(_this)
+								("../imgReady", function(){
+									var
+										_ = _this.dances.imgReady,
+										img
+									;
+
+									startTime = new Date();
+
+									img = new _this.Image();
+									img.src = src;
+									img.onload = function(){
+										loadTime = new Date;
+									};
+
+									_(src, function(_w, _h){
+										readyTime = new Date();
+									});
+
+								})
+							;
+						});
+
+						document.body.appendChild(iframeEl);
+					});
+
+
+					waitsFor(function(){
+						return readyTime && loadTime;
+					}, "load failed", 55000);
+
+					runs(function(){
+						$log(loadTime - readyTime);
+						expect(readyTime < loadTime).toEqual(true);
+					});
+
+
+				});
+
+				it("check GIf", function(){
+					var
+						_ok,
+						cross,
+						w,
+						h,
+						imgReady
+					;
+
+					runs(function(){
+
+						extraReady(iframeEl, function(){
+							var _this = this.contentWindow;
+
+							_this.dances = {};
+
+							dances
+								.add.switchWindow(_this)
+							("../imgReady", function(){
+								var _ = _this.dances.imgReady;
+								imgReady = _;
+
+								_("src/dog.gif", function(_w, _h){
+									_ok = true;
+									w = _w;
+									h = _h;
+									$log(arguments, "gif check load");
+								});
+
+							})
+							;
+						});
+
+						document.body.appendChild(iframeEl);
+					});
+
+					waitsFor(function(){
+						_ok && setTimeout(function(){
+							cross = true;
+						}, 80);
+						return cross;
+					}, "load failed", 15000);
+
+					runs(function(){
+						expect(imgReady.getStatus()).toEqual("end");
+					});
+
+				});
+
 			});
 
-			img.onload = function(){
-				$log("onload!!!", new Date - time);
-			};
-
+			execJasmine();
 		});
 
-		describe("Test",function(){
-			it("TestUnit",function(){
-				expect("ok").toEqual("ok");
-			});
-		});
 	</script>
 
 </body>

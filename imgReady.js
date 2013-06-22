@@ -7,7 +7,7 @@ with dances.plugins
 
 	firstDate: 2013.06.17
 
-	lastDate: 2013.06.18
+	lastDate: 2013.06.23
 
 	require: [
 	],
@@ -19,47 +19,17 @@ with dances.plugins
 
 	log: {
 		"v1.0": [
-			+. TODO checkCode: gif 格式潜在的问题
 			+. {logs}
 		]
 	}
 
 _______*/
 
-/*_______
-# syntax:
-
-	dances.imgReady(pseudoSrc, fn);
-
-## param
-### pseudoSrc 适当重载, 三种类型:
-
-+ src
-	单个src
-+ src,src
-	以 "," 分隔 src 集群
-+ [src, src]
-	数组形式 src 集群
-
-### fn
-imgReady 事件回调, 传入 width, height
-
-## return
-dances.imgReady 单例.
-
-_______*/
-
-
-"use strict";
-
-"function" === typeof window.define && define.amd &&
-define.amd.imgReady &&
-(define.amd.dancesNative = true) &&
-define(["require", "module", "dNative"], function(require, module){
-
+(function(dances, undefined){
+	"use strict";
 	var
-		img2Ready,
-		ctrlReady,
+		imgReady,
+		imager,
 
 		uc = function(fn){
 			return function(){
@@ -72,8 +42,7 @@ define(["require", "module", "dNative"], function(require, module){
 		toString = uc(Object.prototype.toString)
 	;
 
-	ctrlReady = {
-		status: "",
+	imager = {
 
 		add : function(){
 			"[object Array]" !== toString(this.repo) && (this.repo = []);
@@ -81,7 +50,8 @@ define(["require", "module", "dNative"], function(require, module){
 			return this;
 		},
 
-		scan: function(){
+		// 不能直接 invoke
+		__scan: function(){
 			var
 				_this = this,
 				len = this.repo.length - 1,
@@ -93,6 +63,9 @@ define(["require", "module", "dNative"], function(require, module){
 				img
 			;
 
+			this.status = "process";
+
+			// 遍历 __repo, 每个 __repo 包含 img 集群 和 一个事件回调
 			do{
 				imgArr = this.repo[len];
 				fn = imgArr.__img2go;
@@ -113,11 +86,9 @@ define(["require", "module", "dNative"], function(require, module){
 						continue;
 					}
 
-
 					if(img.width > 0 || img.height > 0){
 						img.__enabled || fn.call(img, img.width, img.height);
-						img.__enabled = true;
-						img.error = null;
+						img.onload = img.error = null;
 						img = null;
 						imgArr.splice(_len, 1);
 					}
@@ -128,28 +99,42 @@ define(["require", "module", "dNative"], function(require, module){
 
 			}while(len--);
 
-			this.repo.length && setTimeout(function(){
-				_this.scan();
-			}, 50);
+			if(this.repo.length){
+				setTimeout(function(){
+					_this.__scan();
+				}, 80);
+			}else{
+				this.status = "end";
+			}
+
+			return this;
 		},
 
 		launch: function(){
-			this.repo.length && this.scan();
+			if(this.repo.length && "process" !== this.status){
+			 	this.__scan();
+			}
 			return this;
 		}
 	};
 
-	img2Ready = function(){
+	imgReady = function(){
 		var
 			args = slice(arguments),
 			urls = args.shift(),
-			imgArr,
 			callback = args.pop(),
+
+			imgArr,
 
 			len,
 			url,
 			img
 		;
+
+		if("function" !== typeof callback){
+			$$log("callback 缺失", "error");
+			return this;
+		}
 
 		if("string" === typeof urls){
 			urls = urls.indexOf(",") > -1 ?
@@ -158,17 +143,19 @@ define(["require", "module", "dNative"], function(require, module){
 			;
 		}
 
-		if("[object Array]" !== (toString(urls))){
+		if("[object Array]" !== (toString(urls)) || urls.length < 1){
+			$$log("urls 缺失", "error");
 			return this;
 		}
 
+		// new Image create will be pushed in the arr
 		imgArr = [];
 		imgArr.__img2go = callback;
 
 		len = urls.length - 1;
 
 		do{
-			url = urls;
+			url = urls[len];
 
 			if(!url){ continue; }
 
@@ -204,17 +191,24 @@ define(["require", "module", "dNative"], function(require, module){
 
 		}while(len--);
 
-		urls.length = 0;
-
-		ctrlReady
+		imager
 			.add(imgArr)
 			.launch()
 		;
 
+		urls = null;
+
 		return this;
 	};
 
+	imgReady.getStatus = function(){
+		return imager.status;
+	};
 
-	module.exports = img2Ready;
+	dances.imgReady = imgReady;
 
-});
+	"function" === typeof window.define && define.amd && define.amd.imgReady && define(function(){
+		return imgReady;
+	});
+
+})(window.dances);
