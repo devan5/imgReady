@@ -19,7 +19,7 @@ with dances.plugins
 
 	log: {
 		"v1.0": [
-			+. {logs}
+			+. [local img] 在虚拟机纯粹 xp+ie8, 环境通过测试
 		]
 	}
 
@@ -79,6 +79,8 @@ _______*/
 				do{
 					img = imgArr[_len];
 
+					img._time > 30000 && (img.__error = true);
+
 					if(img.__error){
 						img.onload = img.error = null;
 						img = null;
@@ -86,12 +88,19 @@ _______*/
 						continue;
 					}
 
-					if(img.width > 0 || img.height > 0){
-						img.__enabled || fn.call(img, img.width, img.height);
-						img.onload = img.error = null;
+					// ie10 localEn .png files need img.naturalWidth detect size
+					if(img.width > 0 || img.height > 0 || img.naturalWidth > 0 || img.naturalHeight > 0){
+						img.__enabled || fn.call(img, img.width || img.naturalWidth, img.height || img.naturalHeight);
+						img.onload = null;
 						img = null;
 						imgArr.splice(_len, 1);
+						continue;
 					}
+
+					img._time = "number" == typeof img._time ?
+						img._time + 80 :
+						0
+					;
 
 				}while(_len--);
 
@@ -178,7 +187,8 @@ _______*/
 					};
 
 					img.onload = function(){
-						img.__enabled || callback.call(img, img.width, img.height);
+						top.demo = img;
+						img.__enabled || callback.call(img, img.width || img.naturalWidth, img.height || img.naturalHeight);
 						img.onload = img.onerror = null;
 						img.__enabled = true;
 						img = null;

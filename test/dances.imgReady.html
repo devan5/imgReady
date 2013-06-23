@@ -58,6 +58,24 @@
 
 			src = "https://dl.dropboxusercontent.com/u/21444143/devan5_photos/stale/20100330156.jpg";
 
+			var cache = false;
+
+			function ArraySrc(src){
+				this.arr = [];
+				"string" === typeof src && this.push(src);
+			}
+
+			ArraySrc.prototype = {
+				push: function(src){
+					this.arr.push(src + (cache ? "" : "?" + Math.random()));
+				},
+
+				pop: function(){
+					return this.arr.pop();
+				}
+
+			};
+
 			describe("dances.imgReady", function(){
 
 				var extraReady = undefined === document.createElement("script").onload ?
@@ -120,7 +138,7 @@
 					iframeEl.style.display = "none";
 				});
 
-				0 && it("basic", function(){
+				it("basic", function(){
 
 					var
 						_ok,
@@ -140,7 +158,7 @@
 								("../imgReady", function(){
 									var _ = _this.dances.imgReady;
 
-									_(src, function(_w, _h){
+									_((new ArraySrc(src)).arr, function(_w, _h){
 										_ok = true;
 										w = _w;
 										h = _h;
@@ -165,7 +183,7 @@
 
 				});
 
-				0 && it("local img", function(){
+				it("local img", function(){
 					var
 						_ok,
 						w,
@@ -184,7 +202,7 @@
 								("../imgReady", function(){
 									var _ = _this.dances.imgReady;
 
-									_("src/relivebleach_v41.png", function(_w, _h){
+									_((new ArraySrc("src/relivebleach_v41.png")).arr, function(_w, _h){
 										_ok = true;
 										w = _w;
 										h = _h;
@@ -209,7 +227,7 @@
 
 				});
 
-				0 && describe("多个 urls", function(){
+				describe("多个 urls", function(){
 					it("local", function(){
 						var
 							_ok = 0,
@@ -233,17 +251,17 @@
 										_ = _this.dances.imgReady
 									;
 
-									src = [];
+									src = new ArraySrc();
 									src.push("src/g_0.jpg");
 									src.push("src/g_1.jpg");
 									src.push("src/g_2.jpg");
 									src.push("src/g_3.jpg");
 									src.push("src/g_4.jpg");
 
-									_(src, function(_w, _h){
+									_(src.arr, function(_w, _h){
 										_ok++;
-										w = w && _w > 0;
-										h = h && _h > 0;
+										w = !!w && _w > 0;
+										h = !!h && _h > 0;
 									});
 
 								})
@@ -254,7 +272,7 @@
 						});
 
 						waitsFor(function(){
-							return src && _ok === src.length;
+							return src && _ok === src.arr.length;
 						}, "load failed", 15000);
 
 						runs(function(){
@@ -262,7 +280,7 @@
 						});
 					});
 
-					0 &&it("remote", function(){
+					it("remote", function(){
 						var
 							_ok = 0,
 							w = true,
@@ -284,16 +302,16 @@
 										_ = _this.dances.imgReady
 									;
 
-									src = [];
+									src = new ArraySrc();
 									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/reLivebleach_v1.png");
 									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/reLivebleach_v2.png");
 									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/reLivebleach_v3.png");
 									src.push("https://dl.dropboxusercontent.com/u/21444143/devan5_photos/bleach/relivebleach_v41.png");
 
-									_(src, function(_w, _h){
+									_(src.arr, function(_w, _h){
 										_ok++;
-										w = w && _w > 0;
-										h = h && _h > 0;
+										w = !!w && _w > 0;
+										h = !!h && _h > 0;
 									});
 
 								})
@@ -304,7 +322,7 @@
 						});
 
 						waitsFor(function(){
-							return src && _ok === src.length;
+							return src && _ok === src.arr.length;
 						}, "load failed", 25000);
 
 						runs(function(){
@@ -314,7 +332,7 @@
 					});
 				});
 
-				0 && it("检查定时器机制", function(){
+				it("检查定时器机制", function(){
 					var
 						_ok = 0,
 						w = true,
@@ -343,7 +361,7 @@
 
 									imgReady = _;
 
-									src = [];
+									src = new ArraySrc();
 									src.push("src/g_0.jpg");
 									src.push("src/g_1.jpg");
 									src.push("src/g_2.jpg");
@@ -351,7 +369,7 @@
 									src.push("src/g_4.jpg");
 									src.push("src/relivebleach_v41.png");
 
-									_(src, function(_w, _h){
+									_(src.arr, function(_w, _h){
 										_ok++;
 										w = w && _w > 0;
 										h = h && _h > 0;
@@ -367,10 +385,10 @@
 
 
 					waitsFor(function(){
-						if(src && _ok === src.length){
+						if(src && _ok === src.arr.length){
 							setTimeout(function(){
 								crossFlag = true;
-							}, 80);
+							}, 100);
 						}
 						return crossFlag;
 					}, "load failed", 15000);
@@ -383,7 +401,7 @@
 
 				});
 
-				0 && it("速度 检测", function(){
+				it("速度 检测", function(){
 					var
 						startTime,
 						readyTime,
@@ -408,12 +426,12 @@
 									startTime = new Date();
 
 									img = new _this.Image();
-									img.src = src;
+									img.src = src + "?" + Math.random();
 									img.onload = function(){
 										loadTime = new Date;
 									};
 
-									_(src, function(_w, _h){
+									_(src + "?" + Math.random(), function(_w, _h){
 										readyTime = new Date();
 									});
 
@@ -459,7 +477,7 @@
 								var _ = _this.dances.imgReady;
 								imgReady = _;
 
-								_("src/dog.gif", function(_w, _h){
+								_((new ArraySrc("src/dog.gif").arr), function(_w, _h){
 									_ok = true;
 									w = _w;
 									h = _h;
